@@ -1,0 +1,57 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: black;
+    color: yellow;
+}
+
+.minerva-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.minerva-window {
+    background-color: black;
+    color: yellow;
+    border: 2px solide yellow;
+    width: 400px;
+    padding: 20px;
+    box-shadow: 0px 0px 10px yellow;
+}
+
+header {
+    text-align: center;
+}
+
+#chat-container {
+    border: 2px solid yellow;
+    height: 300px;
+    padding: 10px;
+    overflow-y: scroll;
+    margin-bottom: 10px;
+}
+
+#user-unput {
+   display: flex;
+}
+
+#user-message {
+    flex-grow: 1;
+    padding: 5px;
+    margin-right: 10px;
+}
+
+#send-button {
+    background-color: yellow;
+    color: black;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+footer {
+    text-align: center;
+}
