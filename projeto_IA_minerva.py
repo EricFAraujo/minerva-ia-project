@@ -6,11 +6,11 @@ fuso_horario_brasilia = pytz.timezone('America/Sao_Paulo')
 
 hora_atual_brasilia = datetime.datetime.now(fuso_horario_brasilia)
 
+nome_IA = "Minerva"
+mensagem_apresentacao = f"Olá, eu me chamo {nome_IA}! Fui criada pelo Eric para auxiliá-lo, inicialmente, com afazeres simples do dia-a-dia. Pretendo ser aprimorada todos os dias para que possa me tornar mais eficiente."
+
 # Passo 2: Gravação de usuário
 nome_usuario = input("Por favor, insira seu nome: ")
-
-nome_IA = "Minerva"
-mensagem_apresentacao = f"Olá, me chamo {nome_IA}, irei guiá-lo com algumas atividades no seu dia."
 
 # Passo 3: definir as saudações com base no horário
 if 6 <= hora_atual_brasilia.hour < 12:
