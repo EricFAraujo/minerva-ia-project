@@ -4,55 +4,40 @@ import speech_recognition as sr
 import pyttsx3
 import wikipedia
 import spacy
+import webbrowser
+
+# Variável global para armazenar o nome do usuário
+nome_usuario = ""
 
 audio = sr.Recognizer()
 maquina = pyttsx3.init()
 nlp = spacy.load('pt_core_news_sm')
 
-# Definir o fuso horário
-fuso_horario_brasilia = pytz.timezone('America/Sao_Paulo')
+# Flag para verificar se a apresentação já foi feita
+apresentacao_feita = False
 
-hora_atual_brasilia = datetime.datetime.now(fuso_horario_brasilia)
+# Função para inserir o nome do usuário uma vez
+def inserir_nome():
+    global nome_usuario
+    nome_usuario = input("Por favor, insira seu nome: ")
+    saudacao = determinar_saudacao()  # Utiliza a função para determinar a saudação dinâmica
+    maquina.say(f"{saudacao}, {nome_usuario}! Bem-vindo à Minerva.")
+    maquina.runAndWait()
 
-# Gravação de usuário
-nome_usuario = input("Por favor, insira seu nome: ")
+# Função para determinar a saudação com base no horário atual
+def determinar_saudacao():
+    hora_atual = datetime.datetime.now().hour
+    if 6 <= hora_atual < 12:
+        return "Bom dia"
+    elif 12 <= hora_atual < 18:
+        return "Boa tarde"
+    else:
+        return "Boa noite"
 
-# Definir as saudações com base no horário
-if 6 <= hora_atual_brasilia.hour < 12:
-    saudacao = "Bom dia"
-elif 12 <= hora_atual_brasilia.hour < 18:
-    saudacao = "Boa tarde"
-else:
-    saudacao = "Boa noite"
-
-# Horário de atividades
-horario_cafe_manha = hora_atual_brasilia.replace(hour=7, minute=0, second=0)
-horario_trabalho = hora_atual_brasilia.replace(hour=8, minute=0, second=0)
-horario_almoco_inicio = hora_atual_brasilia.replace(hour=12, minute=0, second=0)
-horario_almoco_fim = horario_almoco_inicio + datetime.timedelta(hours=1)
-horario_estudo = hora_atual_brasilia.replace(hour=16, minute=0, second=0)
-horario_sono = hora_atual_brasilia.replace(hour=22, minute=0, second=0)
-
-# IA informa as atividades conforme o horário
-atividade_atual = ""
-if hora_atual_brasilia < horario_cafe_manha:
-    atividade_atual = "É hora do dormir bebê!"
-elif horario_cafe_manha <= hora_atual_brasilia < horario_trabalho:
-    atividade_atual = "É hora de tomar seu café da manhã."
-elif horario_trabalho <= hora_atual_brasilia < horario_almoco_inicio:
-    atividade_atual = "Hora de ir trabalhar."
-elif horario_almoco_inicio <= hora_atual_brasilia < horario_almoco_fim:
-    atividade_atual = "Hora do almoço."
-elif horario_almoco_fim <= hora_atual_brasilia < horario_estudo:
-    atividade_atual = "Tempo após o almoço"
-elif horario_estudo <= hora_atual_brasilia < horario_sono:
-    atividade_atual = "É hora de estudar guerreiro"
-else:
-    atividade_atual = "É hora de dormir feito um bebê"
-
-# Saudação e apresentação da Minerva
-nome_IA = "Minerva"
-mensagem_apresentacao = f"Olá, eu me chamo {nome_IA}! Fui criada pelo Eric para auxiliá-lo, inicialmente, com afazeres simples do dia-a-dia. Pretendo ser aprimorada todos os dias para que possa me tornar mais eficiente."
+# Função para apresentação inicial da Minerva
+def apresentacao_minerva():
+    maquina.say("Olá, eu sou a Minerva, sua assistente virtual. Fui projetada para ajudá-lo em tarefas diárias e responder a perguntas. Como posso ajudar você hoje?")
+    maquina.runAndWait()
 
 # Função para fazer uma pergunta e obter uma resposta
 def perguntar(texto):
@@ -62,6 +47,7 @@ def perguntar(texto):
     else:
         return "Desculpe, não entendi a pergunta."
 
+# Função para executar os comandos de voz do usuário
 def executa_comando():
     try:
         with sr.Microphone() as source:
@@ -69,9 +55,7 @@ def executa_comando():
             voz = audio.listen(source)
             comando = audio.recognize_google(voz, language="pt-BR")
             comando = comando.lower()
-            if "minerva" in comando:
-                comando = comando.replace("minerva", "")
-                return comando
+            return comando
     except sr.RequestError as e:
         print(f"Não foi possível obter resultados de reconhecimento de fala; {e}")
     except sr.UnknownValueError:
@@ -80,33 +64,54 @@ def executa_comando():
         print(f"Ocorreu um erro durante o reconhecimento de fala: {ex}")
     return ""
 
+# Função para executar os comandos do usuário
 def comando_voz_usuario():
-    comando = executa_comando()
-    if "horas" in comando:
-        hora = datetime.datetime.now().strftime("%H:%M")
-        maquina.say("Agora são " + hora)
-        maquina.runAndWait()
-    elif "procure por" in comando:
-        termo_pesquisa = comando.replace("procure por", "")
-        try:
-            wikipedia.set_lang("pt")
-            resultados = wikipedia.summary(termo_pesquisa, sentences=2)
-            maquina.say(resultados)
+    global nome_usuario
+    global apresentacao_feita
+    # Se o nome do usuário não estiver definido, solicita o nome
+    if not nome_usuario:
+        inserir_nome()
+    # Restante do código...
+    while True:
+        comando = executa_comando()
+        if "horas" in comando:
+            hora = datetime.datetime.now().strftime("%H:%M")
+            maquina.say("Agora são " + hora)
             maquina.runAndWait()
-        except wikipedia.exceptions.DisambiguationError as e:
-            print(f"Houve um erro de desambiguação: {e}")
-            maquina.say("Houve um erro ao buscar o termo. Por favor, seja mais específico.")
+        elif "procure por" in comando:
+            termo_pesquisa = comando.replace("procure por", "")
+            try:
+                wikipedia.set_lang("pt")
+                resultados = wikipedia.summary(termo_pesquisa, sentences=2)
+                maquina.say(resultados)
+                maquina.runAndWait()
+            except wikipedia.exceptions.DisambiguationError as e:
+                print(f"Houve um erro de desambiguação: {e}")
+                maquina.say("Houve um erro ao buscar o termo. Por favor, seja mais específico.")
+                maquina.runAndWait()
+            except wikipedia.exceptions.PageError as e:
+                print(f"Erro de página: {e}")
+                maquina.say("Nada foi encontrado para o termo pesquisado.")
+                maquina.runAndWait()
+        elif "abrir youtube" in comando:
+            webbrowser.open("https://www.youtube.com")
+            maquina.say("Abrindo o YouTube.")
             maquina.runAndWait()
-        except wikipedia.exceptions.PageError as e:
-            print(f"Erro de página: {e}")
-            maquina.say("Nada foi encontrado para o termo pesquisado.")
+        elif "abrir playlist" in comando:
+            playlist_url = "https://www.youtube.com/watch?v=GTT1GkJV2hU"
+            webbrowser.open(playlist_url)
+            maquina.say("Abrindo a playlist no YouTube.")
+            maquina.runAndWait()
+        elif "até logo minerva" in comando:
+            maquina.say("Foi ótimo falar com você, até breve.")
+            maquina.runAndWait()
+            break  # Sai do loop e encerra a conversa
+        elif "me fale sobre você" in comando:
+            apresentacao_minerva()  # Adiciona a apresentação da Minerva quando solicitada pelo usuário
+        else:
+            maquina.say("Desculpe, não entendi o comando.")
             maquina.runAndWait()
 
-print(mensagem_apresentacao)
-saudacao_personalizada = f"{saudacao}, {nome_usuario}!"
-print(saudacao_personalizada)
-print("Neste momento:", atividade_atual)
+# Exemplo de chamada da função comando_voz_usuario
 comando_voz_usuario()
-
-    
 
